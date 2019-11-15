@@ -1,0 +1,102 @@
+<!--The doctype informs the user of the version of HTML-->
+<!DOCTYPE html>
+<!--The html tag defines the document as a web page-->
+<html lang="en">
+<!--The head contains information about the webpage such as title, author, style, and meta tags-->
+<head>
+  <!--This meta tag specifies the website will be written with the 8-bit character set-->
+  <meta charset="utf-8">
+  
+  <!--Links to Leaflet's Cascading Style Sheet (CSS) document-->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+
+  <!-- Links to mapbox's API -->
+  <link href='https://api.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+      <!--Describes the style for the html and body -->
+      html, body {height: 100%; margin: 0; padding: 0}
+      
+	  <!--Describes the style for the map -->
+      #mapid {
+  	   position: absolute;
+  	   height: 100%;
+  	   width: 100%
+      }
+	  
+      <!--Describes the style for the map title-->
+      #map-title { position: relative; margin-top: 10px; margin-left: 50px; float: left; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 6px 8px; font-family: Helvetica; font-weight: bold; font-size: 24px; z-index: 800; }
+
+    </style>
+
+</head>
+
+<body>
+  <!-- Main title describes the map which displays the proximities of the invasive species "Emerald Ash Borer(EAB)" beetle to population centres in Southern Ontario"-->
+  <div id="map-title"> Markham Watermains </div>
+  <div id="mapid"></div>
+
+  <!--Links to Leaflet's javascript API-->
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+  <!-- Links to jQuery Toolkit in order to import json/geojson files from a repository-->
+  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+
+  <!-- Links to turf's js module to perform spatial analysis-->
+  <script src="https://unpkg.com/@turf/turf@5.1.6/turf.min.js"></script>
+
+  <!-- Links to mapbox's javascript file-->
+  <script src='https://api.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
+
+  <script>
+
+/////////////////////Section 1: Adding the map layer///////////////////////////////
+
+  //Instantiate the Leaflet map object using the ID of the <div> element. SetView specifies the lat,long and zoom level
+  var mymap = L.map('mapid').setView([43.9200, -80.0943], 7); 
+
+  //Creates the layercontrol variable and adds it to the map. This can be used to toggle multiple layers
+  var controlLayers = L.control.layers().addTo(mymap);
+
+  //Adds a basemap tile layer from https://leaflet-extras.github.io/leaflet-providers/preview/ and uses addTo command to add it to the map
+  var basemap = L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  
+  //The .addTo method adds the basemap to the map
+  }).addTo(mymap);
+
+
+
+/////////////////////Section 2: Adding the json/geojson layers///////////////////////////////
+
+    
+
+  //This assigns the watermains geojson layer as a variable
+  var watermains;
+  //This loads the watermains geoJSON file using jQuery from github's repository
+  $.getJSON('https://raw.githubusercontent.com/farahtasneem/Markhamwmns/master/Watermains.geojson',
+	function(json) {
+		watermains = L.geoJson(json, {
+		//This describes the style of the watermains
+			style:{
+				"color": "#0D58EE",
+				"weight": 3.0,
+				"opacity": 1
+			},
+			//This creates a pop-up to display the watermains information
+			onEachFeature:  function(feature, layer) {
+				layer.bindPopup(feature.properties.description);
+			}
+			//The .addTo method adds the watermains to the map
+			}).addTo(mymap);
+			//This adds the Ontario population centres feature to the map as an overlay
+		controlLayers.addOverlay(watermains, 'Markham Watermains');
+	});  
+ 
+
+
+//These indicate the end tags of script, body and html
+</script>
+</body>
+</html>
