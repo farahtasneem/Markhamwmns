@@ -1,102 +1,86 @@
-<!--The doctype informs the user of the version of HTML-->
-<!DOCTYPE html>
-<!--The html tag defines the document as a web page-->
-<html lang="en">
-<!--The head contains information about the webpage such as title, author, style, and meta tags-->
-<head>
-  <!--This meta tag specifies the website will be written with the 8-bit character set-->
-  <meta charset="utf-8">
-  
-  <!--Links to Leaflet's Cascading Style Sheet (CSS) document-->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
-
-  <!-- Links to mapbox's API -->
-  <link href='https://api.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
-
-    <style>
-      <!--Describes the style for the html and body -->
-      html, body {height: 100%; margin: 0; padding: 0}
-      
-	  <!--Describes the style for the map -->
-      #mapid {
-  	   position: absolute;
-  	   height: 100%;
-  	   width: 100%
-      }
-	  
-      <!--Describes the style for the map title-->
-      #map-title { position: relative; margin-top: 10px; margin-left: 50px; float: left; background: white; border: 2px solid rgba(0,0,0,0.2); padding: 6px 8px; font-family: Helvetica; font-weight: bold; font-size: 24px; z-index: 800; }
-
-    </style>
-
-</head>
-
-<body>
-  <!-- Main title describes the map which displays the proximities of the invasive species "Emerald Ash Borer(EAB)" beetle to population centres in Southern Ontario"-->
-  <div id="map-title"> Markham Watermains </div>
-  <div id="mapid"></div>
-
-  <!--Links to Leaflet's javascript API-->
-  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
-
-  <!-- Links to jQuery Toolkit in order to import json/geojson files from a repository-->
-  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-
-  <!-- Links to turf's js module to perform spatial analysis-->
-  <script src="https://unpkg.com/@turf/turf@5.1.6/turf.min.js"></script>
-
-  <!-- Links to mapbox's javascript file-->
-  <script src='https://api.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
-
-  <script>
-
-/////////////////////Section 1: Adding the map layer///////////////////////////////
-
-  //Instantiate the Leaflet map object using the ID of the <div> element. SetView specifies the lat,long and zoom level
-  var mymap = L.map('mapid').setView([43.9200, -80.0943], 7); 
-
-  //Creates the layercontrol variable and adds it to the map. This can be used to toggle multiple layers
-  var controlLayers = L.control.layers().addTo(mymap);
-
-  //Adds a basemap tile layer from https://leaflet-extras.github.io/leaflet-providers/preview/ and uses addTo command to add it to the map
-  var basemap = L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  
-  //The .addTo method adds the basemap to the map
-  }).addTo(mymap);
-
-
-
-/////////////////////Section 2: Adding the json/geojson layers///////////////////////////////
-
+<!--Indicates the HTML is HTML5 from 2014-->
+<!DOCTYPE html> 
+<html>
+    <head>
+        <!-- link element creates a link between the HTML document and external source. The rel attribute specifies the relationship between two docs-->
+        <link rel="stylesheet" href= "https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/css/ol.css" type="text/css">
+        
+        <style>
+            .map {
+                height: 600px;
+                width: 60%;
+                }
+            
+            h1 {
+                border: 1px solid black;
+                }
+        </style>
+        
+        <!-- source code for javascript-->
+        <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.1.1/build/ol.js"></script>
+		
+		<!-- source code for obtaining projections -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.4.3/proj4.js"></script>
+		<script src="https://epsg.io/26917.js"></script>
+		
+		  <!-- Links to jQuery Toolkit in order to import json/geojson files from a repository-->
+		<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+     
+    </head>
     
+    <body>
 
-  //This assigns the watermains geojson layer as a variable
-  var watermains;
-  //This loads the watermains geoJSON file using jQuery from github's repository
-  $.getJSON('https://raw.githubusercontent.com/farahtasneem/Markhamwmns/master/Watermains.geojson',
-	function(json) {
-		watermains = L.geoJson(json, {
-		//This describes the style of the watermains
-			style:{
-				"color": "#0D58EE",
-				"weight": 3.0,
-				"opacity": 1
-			},
-			//This creates a pop-up to display the watermains information
-			onEachFeature:  function(feature, layer) {
-				layer.bindPopup(feature.properties.description);
-			}
-			//The .addTo method adds the watermains to the map
-			}).addTo(mymap);
-			//This adds the Ontario population centres feature to the map as an overlay
-		controlLayers.addOverlay(watermains, 'Markham Watermains');
-	});  
+    <h1 style="font-family:verdana"> Watermain Breaks in Markham </h1> 
+        <div id="map" class="map"></div>
+    
+        <script type="text/javascript">
+			
+			<!-- Get projection of features-->
+			ol.proj.proj4.register(proj4)
+        
+			<!--Create two variables: map and vectors--> 
+			
+			var vectorProjection = ol.proj.get('EPSG:26917'); //This fetches the projection
+			
+			var map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    }),
+				], 
+				
+				/* This is used to define the
+				map's extents using the long and lat
+				*/
+				
+				view: new ol.View({
+                    center: ol.proj.fromLonLat([-79.337021, 43.856098]),
+                    zoom: 12
+                })
+				
+			})
+			
+			var wmns = new ol.layer.Vector({
+				title: 'Watermains',
+				source: new ol.source.Vector({
+					url: $.getJSON('https://raw.githubusercontent.com/farahtasneem/Markhamwmns/master/Watermains.geojson'),
+					format: new ol.format.GeoJSON({
+						featureProjection: vectorProjection
+					})
+				}),
+
+			});
+			
+			map.addLayer(wmns);
+			
+				
+
  
+			<!--Overlay vector features on the map-->
+            
+			
+        </script>
 
-
-//These indicate the end tags of script, body and html
-</script>
-</body>
+    </body>
 </html>
